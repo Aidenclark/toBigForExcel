@@ -283,3 +283,82 @@ result_df = find_matches(df)
 result_df.to_excel('matched_results.xlsx', index=False)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import pandas as pd
+import time
+
+def find_4_char_match(mac_address, comm_ids, latitudes, longitudes):
+    mac_address = mac_address[3:]  # Exclude the first three characters
+    matches = {'COMM_ID_NB': [], 'MacAddress': [], 'Latitude': [], 'Longitude': []}
+
+    for comm_id, lat, lon in zip(comm_ids, latitudes, longitudes):
+        for i in range(len(comm_id) - 3):
+            if comm_id[i:i+4] in mac_address:
+                matches['COMM_ID_NB'].append(comm_id)
+                matches['MacAddress'].append(mac_address)
+                matches['Latitude'].append(lat)
+                matches['Longitude'].append(lon)
+                break  # Break after first match for this COMM_ID_NB
+
+    return matches
+
+# Start the timer
+start_time = time.time()
+
+# Load your Excel file
+file_path = 'your_file.xlsx'  # Replace with your file path
+print("Loading data...")
+load_start_time = time.time()
+df = pd.read_excel(file_path)
+load_end_time = time.time()
+print(f"Data loaded in {load_end_time - load_start_time} seconds.")
+
+# Convert columns to string type
+df['COMM_ID_NB'] = df['COMM_ID_NB'].astype(str)
+df['configuration.MacAddress'] = df['configuration.MacAddress'].astype(str)
+
+# Vectorized operation for matching
+print("Performing matching operation...")
+match_start_time = time.time()
+comm_ids = df['COMM_ID_NB'].tolist()
+latitudes = df['GPS_LATITUDE_TX'].tolist()
+longitudes = df['GPS_LONGITUDE_TX'].tolist()
+results = df['configuration.MacAddress'].apply(lambda x: find_4_char_match(x, comm_ids, latitudes, longitudes))
+match_end_time = time.time()
+print(f"Matching operation completed in {match_end_time - match_start_time} seconds.")
+
+# Expand the results into separate columns
+df['Matched_COMM_ID_NB'] = results.apply(lambda x: x['COMM_ID_NB'])
+df['Matched_MacAddress'] = results.apply(lambda x: x['MacAddress'])
+df['Matched_Latitude'] = results.apply(lambda x: x['Latitude'])
+df['Matched_Longitude'] = results.apply(lambda x: x['Longitude'])
+
+# Save the results to a new Excel file
+print("Saving results...")
+save_start_time = time.time()
+df.to_excel('matched_results.xlsx', index=False)
+save_end_time = time.time()
+print(f"Results saved in {save_end_time - save_start_time} seconds.")
+
+# End the timer
+end_time = time.time()
+print(f"Total execution time: {end_time - start_time} seconds.")
+
+
