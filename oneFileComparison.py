@@ -112,3 +112,55 @@ def find_matches(df):
                     break  # Stop searching after the first match for this row
 
     return df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import pandas as pd
+
+def is_similar(value1, value2):
+    if pd.isna(value1) or pd.isna(value2):
+        return False
+    value1, value2 = str(value1)[3:], str(value2)  # Strip "915" from value1
+
+    # Any matching substring of 4 characters
+    for i in range(len(value1) - 3):
+        if value1[i:i+4] in value2:
+            return True
+    return False
+
+# Path to the Excel file
+dataset_path = r'C:/Users/aclark/OneDrive - patrickengineering/Documents/ArcGIS/Projects/Playground/MeteringReport.xlsx' 
+dataset = pd.read_excel(dataset_path)
+
+# Columns to compare
+column1 = 'configuration.MacAddress'
+column2 = 'COMM_ID_NB'
+
+# Matched rows
+matched_rows = []
+
+for _, row in dataset.iterrows():
+    if is_similar(row[column1], row[column2]):
+        matched_rows.append({column1: row[column1], column2: row[column2]})
+
+mapped_output = pd.DataFrame(matched_rows)
+
+# Save the result
+output_path = r'C:/Users/aclark/OneDrive - patrickengineering/Documents/ArcGIS/Projects/Playground/mapped_output.xlsx'
+mapped_output.to_excel(output_path, index=False)
+
+print("The data has been compared and the results are saved in 'mapped_output.xlsx'")
+
