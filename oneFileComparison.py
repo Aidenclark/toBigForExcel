@@ -164,3 +164,68 @@ mapped_output.to_excel(output_path, index=False)
 
 print("The data has been compared and the results are saved in 'mapped_output.xlsx'")
 
+
+
+
+
+
+
+
+
+
+
+
+import pandas as pd
+
+def find_matches(df):
+    # Create new columns for the output
+    df['Matched_MacAddress'] = None
+    df['Matched_Latitude'] = None
+    df['Matched_Longitude'] = None
+
+    # Convert the columns to string type to handle non-string data
+    df['COMM_ID_NB'] = df['COMM_ID_NB'].astype(str)
+    df['configuration.MacAddress'] = df['configuration.MacAddress'].astype(str)
+
+    # Variables to track matches and non-matches
+    match_count = 0
+    no_match_count = 0
+
+    # Iterate over the rows in the dataframe
+    for index, row in df.iterrows():
+        comm_id = row['COMM_ID_NB']
+        mac_address = row['configuration.MacAddress'][3:]  # Exclude the first three characters
+        match_found = False
+
+        # Check for 4-character matches
+        for i in range(len(comm_id) - 3):
+            for j in range(len(mac_address) - 3):
+                if comm_id[i:i+4] == mac_address[j:j+4]:
+                    # Update the new columns with matched data
+                    df.at[index, 'Matched_MacAddress'] = mac_address
+                    df.at[index, 'Matched_Latitude'] = row['GPS_LATITUDE_TX']
+                    df.at[index, 'Matched_Longitude'] = row['GPS_LONGITUDE_TX']
+                    match_found = True
+                    match_count += 1
+                    break  # Stop searching after the first match for this row
+            if match_found:
+                break
+
+        if not match_found:
+            no_match_count += 1
+
+    print(f"Total matches found: {match_count}")
+    print(f"Total no matches found: {no_match_count}")
+
+    return df
+
+# Load your Excel file
+file_path = 'your_file.xlsx'  # Replace with your file path
+df = pd.read_excel(file_path)
+
+# Call the function to find matches
+result_df = find_matches(df)
+
+# Save the results to a new Excel file
+result_df.to_excel('matched_results.xlsx', index=False)
+
